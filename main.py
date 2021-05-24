@@ -4,18 +4,35 @@ from assets import player_classes, enemy_types, Tile, cave_description
 # global variables
 difficulty = 1  # used to adjust dice rolls for traps and enemy generation
 player_level = 1  # used to adjust dice rolls for traps and enemy generation
-max_tiles = 3  # tiles at which the end tile is generated
+max_tiles = 5  # tiles at which the end tile is generated
 enemy = []  # global enemies list. used to call enemies by index
 tile = []  # global tiles list. used to call tiles by index
 cave_map = []  # global list of pairs (tile, path taken, where it leads) to prevent new tile generation
 
 
-# def gen_tile_description()
-# def rest()
-
 def d20():
     import random
     return random.randint(1, 20)
+
+
+def check_condition(target):
+    if target.condition == 'poisoned':
+        target.hp -= 1
+        print(f'You take 1 damage from being poisoned.')
+        if d20() >= 10:
+            target.condition = 0
+            print(f'Your system has ridden itself of the poison.')
+    elif target.condition == 'hobbled':
+        target.condition = 0
+        print(f'You are hobbled and cannot move this turn.')
+        return 'hobbled'
+    elif target.condition == 'blind':  # to review
+        target.ac -= 4
+        print(f'You are blind and your attack suffers greatly.')
+        if d20() >= 10:
+            target.condition = 0
+            target.ac += 4
+            print(f'Your vision has been restored and you are no longer blind.')
 
 
 def player_attack(attacker, target, weapon):
@@ -45,8 +62,9 @@ def enemy_attack(attacker, target, weapon):
     if dice + attacker.attack + weapon.attack >= target.ac:
         target.hp -= weapon.damage
         print(f'The {attacker.name} attacks you with its {weapon.name} and hits you for {weapon.damage} damage!')
-        # if target.hp <= 0:
-        #     print(f'You died.')  # you dead brah
+        if weapon.poisoned:
+            target.condition = 'poisoned'
+            print(f'You have been poisoned.')
     else:
         print(f'The {attacker.name} strikes back with its {weapon.name} but misses!')
 
@@ -95,27 +113,31 @@ def gen_tile(location, chosen_path):
 
 
 def gen_tile0():
-    new_tile = Tile(ways_out=1, trap_type=0, text_description="a recently collapsed, damp and foul smelling cave.", enemy=0, link0=-1, link1=-1,
-                    link2=-1, link3=-1, visited=False)     # new_tile object of class Tile gets created
+    new_tile = Tile(ways_out=1, trap_type=0, text_description="a recently collapsed cave", enemy=0, link0=-1, link1=-1,
+                    link2=-1, link3=-1, visited=True)     # new_tile object of class Tile gets created
     tile.append(new_tile)                   # and it gets added to the list of tiles
-    # print(f'Generated tile {len(tile) - 1}.')
+    print(f"""Your eyes barely open after the fall and you realize you're now underground.
+Determined to get out of here, you evaluate your options.""")
 
 
 def present_tile(player, tile):
-    if not tile[player.location].visited:
-        print(f"""
-You find yourself in {tile[player.location].text_description}""")
-        tile[player.location].visited = True
+    if not tile[player.location].visited:  # checks if the current tile was not visited before by the player
+        print(f"""Exploring further, you find {tile[player.location].text_description}.""")
+        tile[player.location].visited = True  # marks current tile as visited by the player
+    elif tile[player.location].enemy == 0 and player.location == 0 and len(tile) > 1:
+        print(f"You're back in that damned collapsed cave where you started.")
+    elif tile[player.location].enemy == 0 and len(tile) > 1:
+        print(f"You find yourself in {tile[player.location].text_description}. You recognize the place "
+              f"but it gives you no comfort.")
     else:
-        print(f"""
-You recognize {tile[player.location].text_description}""")
+        pass
 
 
 def get_player_input(player, tile):
     if tile[player.location].enemy != 0:
-        print(f'There is a {tile[player.location].enemy.name} looking at you. You can either [A]ttack it or go [B]ack.')
+        print(f'A {tile[player.location].enemy.name} faces you. You can either [A]ttack it or go [B]ack.')
     else:
-        print(f'You may Res[T] here at your own risk in the hope of regaining some HP.')
+        print(f'You may Res[T] here and risk being ambushed in the hope of regaining some HP.')
         if tile[player.location].ways_out == 1 and player.location != 0:
             print(f'There is a way [F]orward. You could also go [B]ack.')
         elif tile[player.location].ways_out == 1 and player.location == 0:
@@ -160,12 +182,14 @@ def rest(player, tile):
 
 
 def start_turn(player, tile):
+    print("")
+    check_condition(player)
+    # checks if the player has moved to another tile before describing the tile
     present_tile(player, tile)
     get_player_input(player, tile)
 
 
 player = player_classes[1]  # 0 ranger, 1 fighter
-
 gen_tile0()
 
 while True:
@@ -174,7 +198,7 @@ while True:
             # maximum no of tiles for the game and that there's no enemy on the last tile
             start_turn(player, tile)
         else:
-            print(f'You have reached the end of the dungeon!')
+            print(f'You have reached the end of the dungeon and can return safely to the surface!')
             break
     else:
         print(f'You are dead. Game over!')

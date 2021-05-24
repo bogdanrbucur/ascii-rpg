@@ -1,15 +1,6 @@
 import random
 
-
-class Condition:
-    def __copy__(self, poison, hobbled, blind, immediate_damage):
-        self.poison = poison
-        self.hobbled = hobbled
-        self.blind = blind
-        self.immediate_damage = immediate_damage
-
-
-poisoned = Condition()
+conditions = ("poisoned", "hobbled", "blind")
 
 
 class Weapon:
@@ -51,7 +42,7 @@ enemy_types = [goblin, goblin_champion, kobold_archer, spider]
 
 
 class PlayerCharacter:
-    def __init__(self, max_hp, hp, ac, attack, weapon, xp, location):
+    def __init__(self, max_hp, hp, ac, attack, weapon, xp, location, condition):
         self.max_hp = max_hp
         self.hp = hp
         self.ac = ac
@@ -59,10 +50,11 @@ class PlayerCharacter:
         self.weapon = weapon
         self.xp = xp
         self.location = location
+        self.condition = condition
 
 
-ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, location=0)
-fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, location=0)
+ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, location=0, condition=0)
+fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, location=0, condition=0)
 
 player_classes = [ranger, fighter]
 
@@ -87,6 +79,5 @@ cave_word3 = ['with damp walls', 'with a slippery floor', 'traversed by a snakin
 
 
 def cave_description():
-    descrip = random.choice(cave_word1) + " " + random.choice(cave_word2) + " " + random.choice(cave_word3) + "."
+    descrip = random.choice(cave_word1) + " " + random.choice(cave_word2) + " " + random.choice(cave_word3)
     return descrip
-

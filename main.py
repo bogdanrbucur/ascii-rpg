@@ -129,8 +129,6 @@ def present_tile(player, tile):
     elif tile[player.location].enemy == 0 and len(tile) > 1:
         print(f"You find yourself in {tile[player.location].text_description}. You recognize the place "
               f"but it gives you no comfort.")
-    else:
-        pass
 
 
 def get_player_input(player, tile):

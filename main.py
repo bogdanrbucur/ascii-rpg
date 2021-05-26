@@ -148,12 +148,12 @@ def get_player_input(player, tile):
     command = input(f'You choose to: ')
 
     if command.upper() == "B" and player.location != 0:
-        player.location = tile[player.location].link0  # player location is updated to previous tile
+        player.location = tile[player.location].link0  # player goes to the previous tile
     elif command.upper() == "B" and player.location == 0:
         print(f'You cannot go back up. The only way is [F]orward.')
     elif command.upper() == "L" and tile[player.location].ways_out >= 2:
         gen_tile(player.location, 1)
-    elif command.upper() == "F":
+    elif command.upper() == "F" and tile[player.location].ways_out != 2:
         gen_tile(player.location, 2)
     elif command.upper() == "R" and tile[player.location].ways_out >= 2:
         gen_tile(player.location, 3)

@@ -6,8 +6,8 @@ difficulty = 1  # used to adjust dice rolls for traps and enemy generation
 player_level = 1  # used to adjust dice rolls for traps and enemy generation
 max_tiles = 5  # tiles at which the end tile is generated
 enemy = []  # global enemies list. used to call enemies by index
-tile = []  # global tiles list. used to call tiles by index
-cave_map = []  # global list of pairs (tile, path taken, where it leads) to prevent new tile generation
+tile = []  # global tiles list. used to call tiles by index and count explored tiles
+cave_map = []  # global list of pairs (tile, path taken) to prevent new tile generation
 
 
 def d20():
@@ -17,12 +17,13 @@ def d20():
 
 def attack(attacker, target, weapon):
     if attacker == player:
-        if d20() + attacker.attack + weapon.attack >= target.ac:
+        dice = d20()
+        if dice + attacker.attack + weapon.attack >= target.ac:
             target.hp -= weapon.damage
-            print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice+attacker.attack+weapon.attack}. '
+            print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice + attacker.attack + weapon.attack}. '
                   f'Target AC: {target.ac}.')
             if target.hp <= 0:
-                tile[attacker.location].enemy = 0  # the enemy is removed from the current player tile
+                player.location.enemy = 0  # the enemy is removed from the current player tile
                 # enemy should also be removed from enemies list? maybe later
                 attacker.xp += target.xp_worth
                 print(f'You attack the {target.name} with your {weapon.name} for {weapon.damage} damage and kill it.'
@@ -36,7 +37,8 @@ def attack(attacker, target, weapon):
             print(f'You missed!')
             attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
     else:  # if the attacker is the enemy
-        if d20() + attacker.attack + weapon.attack >= target.ac:
+        dice = d20()
+        if dice + attacker.attack + weapon.attack >= target.ac:
             target.hp -= weapon.damage
             print(f'The {attacker.name} attacks you with its {weapon.name} and hits you for {weapon.damage} damage!')
             if weapon.apply_condition != 0:
@@ -60,88 +62,88 @@ def gen_enemy():
 def gen_tile(location, chosen_path):
     if not cave_map.__contains__((location, chosen_path)):  # checks if the player has taken that path before
         new_tile = Tile(ways_out=random.randint(1, 3), trap_type=0, text_description=cave_description(), enemy=0,
-                        link0=location, link1=-1, link2=-1, link3=-1, visited=False)
+                        link0=location, link1=-1, link2=-1, link3=-1, visited=False, start_tile=False)
         # link0(back) always links to current tile
 
-        tile.append(new_tile)                                            # new tile gets added to the tile list
-        new_tile_id = len(tile) - 1                                      # newly generated tile id
-                                                                         # new_tile is the tile object itself
+        tile.append(new_tile)  # new tile gets added to the tile list
+        new_tile_id = len(tile) - 1  # newly generated tile id
+        # new_tile is the tile object itself
 
         if chosen_path == 1:  # links current location tile to the newly generated tile by chosen_path
-            tile[location].link1 = new_tile_id  # path 1 of current tile links to the newly generated tile
+            player.location.link1 = new_tile  # path 1 of current tile links to the newly generated tile
         elif chosen_path == 2:
-            tile[location].link2 = new_tile_id  # path 2 of current tile links to the newly generated tile
+            player.location.link2 = new_tile  # path 2 of current tile links to the newly generated tile
         elif chosen_path == 3:
-            tile[location].link3 = new_tile_id  # path 3 of current tile links to the newly generated tile
+            player.location.link3 = new_tile  # path 3 of current tile links to the newly generated tile
 
         # print(f'Generated tile{new_tile_id}. tile{location} is linked to tile{new_tile_id} by link{chosen_path}.')
         # print(f'Tile {new_tile_id} is {tile[-1].text_description}')
 
-        tile[new_tile_id].enemy = gen_enemy()  # the newly generated tile gets a newly generated enemy
-        cave_map.append((location, chosen_path))  # records that the player has chosen this path from this location
-        player.location = new_tile_id  # player location gets updated to the newly generated tile
+        player.location = new_tile  # player location gets updated to the newly generated tile
+        player.location.enemy = gen_enemy()  # the newly generated tile gets a newly generated enemy
+        cave_map.append((location, chosen_path))  # records that the player has chosen this path from this tile
+
     else:
         if chosen_path == 1:  # if path was taken before, player location is updated to previously generated tile
-            player.location = tile[location].link1
+            player.location = player.location.link1
         elif chosen_path == 2:
-            player.location = tile[location].link2
+            player.location = player.location.link2
         elif chosen_path == 3:
-            player.location = tile[location].link3
+            player.location = player.location.link3
 
 
 def gen_tile0():
-    new_tile = Tile(ways_out=1, trap_type=0, text_description="a recently collapsed cave", enemy=0, link0=-1, link1=-1,
-                    link2=-1, link3=-1, visited=True)     # new_tile object of class Tile gets created
-    tile.append(new_tile)                   # and it gets added to the list of tiles
+    tile0 = Tile(ways_out=1, trap_type=0, text_description="a recently collapsed cave", enemy=0, link0=-1, link1=-1,
+                 link2=-1, link3=-1, visited=True, start_tile=True)  # new_tile object of class Tile gets created
+    tile.append(tile0)  # and it gets added to the list of tiles
+    player.location = tile0
     print(f"""Your eyes barely open after the fall and you realize you're now underground.
 Determined to get out of here, you evaluate your options.""")
 
 
-def present_tile(player, tile):
-    if not tile[player.location].visited:  # checks if the current tile was not visited before by the player
-        print(f"""Exploring further, you find {tile[player.location].text_description}.""")
-        tile[player.location].visited = True  # marks current tile as visited by the player
-    elif tile[player.location].enemy == 0 and player.location == 0 and len(tile) > 1:  # checks if it's tile 0
+def present_tile():
+    if not player.location.visited:  # checks if the current tile was not visited before by the player
+        print(f"""Exploring further, you find {player.location.text_description}.""")
+        player.location.visited = True  # marks current tile as visited by the player
+    elif player.location.enemy == 0 and player.location == 0 and len(tile) > 1:  # checks if it's tile 0
         print(f"You're back in that damned collapsed cave where you started.")
-    elif tile[player.location].enemy == 0 and len(tile) > 1:  # checks if it's another visited tile than tile 0
-        print(f"You find yourself in {tile[player.location].text_description}. You recognize the place "
+    elif player.location.enemy == 0 and len(tile) > 1:  # checks if it's another visited tile than tile 0
+        print(f"You find yourself in {player.location.text_description}. You recognize the place "
               f"but it gives you no comfort.")
 
 
-def get_player_input(player, tile):
-    if tile[player.location].enemy != 0:
-        print(f'A {tile[player.location].enemy.name} faces you. You can either [A]ttack it or go [B]ack.')
+def get_player_input():
+    if player.location.enemy != 0:
+        print(f'A {player.location.enemy.name} faces you. You can either [A]ttack it or go [B]ack.')
     else:
         print(f'You may Res[T] here and risk being ambushed in the hope of regaining some HP.')
-        if tile[player.location].ways_out == 1 and player.location != 0:
+        if player.location.ways_out == 1 and not player.location.start_tile:
             print(f'There is a way [F]orward. You could also go [B]ack.')
-        elif tile[player.location].ways_out == 1 and player.location == 0:
+        elif player.location.ways_out == 1 and player.location.start_tile:
             print(f'You cannot go back up. The only way is [F]orward.')
-        elif tile[player.location].ways_out == 2:
+        elif player.location.ways_out == 2:
             print(f'You can either go [L]eft or [R]ight or [B]ack.')
-        elif tile[player.location].ways_out == 3:
+        elif player.location.ways_out == 3:
             print(f'You can choose to go [L]eft, [F]orward or [R]ight. Or you can turn [B]ack the way you came.')
 
     command = input(f'You choose to: ')
 
-    if command.upper() == "B" and player.location != 0:
-        player.location = tile[player.location].link0  # player goes to the previous tile
-    elif command.upper() == "B" and player.location == 0:
+    if command.upper() == "B" and not player.location.start_tile:
+        player.location = player.location.link0  # player goes to the previous tile
+    elif command.upper() == "B" and player.location.start_tile:
         print(f'You cannot go back up. The only way is [F]orward.')
-    elif command.upper() == "L" and tile[player.location].ways_out >= 2:
+    elif command.upper() == "L" and player.location.ways_out >= 2:
         gen_tile(player.location, 1)
-    elif command.upper() == "F" and tile[player.location].ways_out != 2:
+    elif command.upper() == "F" and player.location.ways_out != 2:
         gen_tile(player.location, 2)
-    elif command.upper() == "R" and tile[player.location].ways_out >= 2:
+    elif command.upper() == "R" and player.location.ways_out >= 2:
         gen_tile(player.location, 3)
-    elif command.upper() == "A" and tile[player.location].enemy != 0:
-        attack(player, tile[player.location].enemy, player.weapon)
-    elif command.upper() == "T" and tile[player.location].enemy == 0:
+    elif command.upper() == "A" and player.location.enemy != 0:
+        attack(player, player.location.enemy, player.weapon)
+    elif command.upper() == "T" and player.location.enemy == 0:
         rest(player, tile)
-    elif command.upper() == "T" and tile[player.location].enemy != 0:
-        print(f'You cannot rest under the gaze of the {tile[player.location].enemy.name}!')
-    elif player.condition == hobbled:
-        print(f'You are hobbled and cannot move this turn.')
+    elif command.upper() == "T" and player.location.enemy != 0:
+        print(f'You cannot rest under the gaze of the {player.location.enemy.name}!')
     else:
         print(f'Wrong command.')
 
@@ -150,20 +152,21 @@ def rest(player, tile):
     if random.randint(1, 10) + difficulty + player_level > 5:
         tile[player.location].enemy = gen_enemy()
         print(f'Your rest is interrupted!')
-        get_player_input(player, tile)
+        get_player_input()
     else:
         player.hp += 2
         if player.hp > player.max_hp:
             player.hp = player.max_hp
         print(f'You got a well-deserved rest and are now at {player.hp}/{player.max_hp} HP.')
+# will make it a player method
 
 
-def start_turn(player, tile):
+def start_turn():
     print("")
     player.check_condition()
     # checks if the player has moved to another tile before describing the tile
-    present_tile(player, tile)
-    get_player_input(player, tile)
+    present_tile()
+    get_player_input()
 
 
 player = player_classes[1]  # 0 ranger, 1 fighter
@@ -171,12 +174,14 @@ gen_tile0()
 
 while True:
     if player.hp > 0:
-        if len(tile) < max_tiles + player_level + difficulty or tile[player.location].enemy != 0:  # checks if reached
+        if len(tile) < max_tiles + player_level + difficulty or player.location.enemy != 0:  # checks if reached
             # maximum no of tiles for the game and that there's no enemy on the last tile
-            start_turn(player, tile)
+            start_turn()
         else:
             print(f'You have reached the end of the dungeon and can return safely to the surface!')
             break
+            # this doesn't stop the game?
     else:
         print(f'You are dead. Game over!')
         break
+

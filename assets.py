@@ -87,14 +87,14 @@ class PlayerCharacter:
         #         print(f'Your vision has been restored and you are no longer blind.')
 
 
-ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, location=0, condition=0)
-fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, location=0, condition=0)
+ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, location=None, condition=0)
+fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, location=None, condition=0)
 
 player_classes = [ranger, fighter]
 
 
 class Tile:
-    def __init__(self, ways_out, trap_type, text_description, enemy, link0, link1, link2, link3, visited):
+    def __init__(self, ways_out, trap_type, text_description, enemy, link0, link1, link2, link3, visited, start_tile):
         self.ways_out = ways_out
         self.trap_type = trap_type
         self.text_description = text_description
@@ -104,6 +104,7 @@ class Tile:
         self.link2 = link2  # link to next tile forward if 1 or 3 ways out
         self.link3 = link3  # link to next tile right if 3 ways out
         self.visited = visited
+        self.start_tile = start_tile
 
 
 cave_word1 = ['a dimly lit', 'an ominously dark', 'an eerily quiet',

@@ -1,23 +1,37 @@
 import random
 
-conditions = ("poisoned", "hobbled", "blind")
+
+class Condition:
+    def __init__(self, name, damage, ac_reduction, duration):
+        self.name = name
+        self.damage = damage
+        self.ac_reduction = ac_reduction
+        self.duration = duration
+
+
+poisoned = Condition(name='poisoned', damage=1, duration=0, ac_reduction=0)
+hobbled = Condition(name='hobbled', damage=0, duration=1, ac_reduction=0)  # not implemented
+blind = Condition(name='blind', damage=0, duration=1, ac_reduction=-4)  # not implemented
+
+
+conditions = (poisoned, hobbled, blind)
 
 
 class Weapon:
-    def __init__(self, name, attack_bonus, damage, value, poisoned):
+    def __init__(self, name, attack_bonus, damage, value, apply_condition):
         self.name = name
         self.attack = attack_bonus
         self.damage = damage
         self.value = value
-        self.poisoned = poisoned
+        self.apply_condition = apply_condition
 
 
-unarmed = Weapon(name='fists', attack_bonus=0, damage=1, value=0, poisoned=False)
-rusty_dagger = Weapon(name='rusty dagger', attack_bonus=0, damage=2, value=50, poisoned=False)
-steel_sword = Weapon(name='steel sword', attack_bonus=1, damage=4, value=200, poisoned=False)
-bow = Weapon(name='bow', attack_bonus=4, damage=3, value=300, poisoned=False)
-poisoned_fangs = Weapon(name='poisoned fangs', attack_bonus=2, damage=1, value=0, poisoned=True)
-god_weapon = Weapon(name='god_weapon', attack_bonus=20, damage=20, value=0, poisoned=False)
+unarmed = Weapon(name='fists', attack_bonus=0, damage=1, value=0, apply_condition=0)
+rusty_dagger = Weapon(name='rusty dagger', attack_bonus=0, damage=2, value=50, apply_condition=0)
+steel_sword = Weapon(name='steel sword', attack_bonus=1, damage=4, value=200, apply_condition=0)
+bow = Weapon(name='bow', attack_bonus=4, damage=3, value=300, apply_condition=0)
+poisoned_fangs = Weapon(name='poisoned fangs', attack_bonus=2, damage=1, value=0, apply_condition=poisoned)
+god_weapon = Weapon(name='god_weapon', attack_bonus=20, damage=20, value=0, apply_condition=0)
 
 weapons = [unarmed, rusty_dagger, steel_sword, bow, poisoned_fangs, god_weapon]
 
@@ -51,6 +65,26 @@ class PlayerCharacter:
         self.xp = xp
         self.location = location
         self.condition = condition
+
+    def check_condition(self):
+        from main import d20
+        if self.condition == poisoned:
+            self.hp -= 1
+            print(f'You take 1 damage from being poisoned.')
+            if d20() >= 10:
+                self.condition = 0
+                print(f'Your system has ridden itself of the poison.')
+        # elif self.condition == hobbled:
+        #     self.condition = 0
+        #     print(f'You are hobbled and cannot move this turn.')
+        #     return 'hobbled'
+        # elif self.condition == blind:  # to review
+        #     self.ac += self.condition.ac_reduction
+        #     print(f'You are blinded for 1 turn and your attack suffers greatly.')
+        #     if d20() >= 10:
+        #         self.condition = 0
+        #         self.ac += 4
+        #         print(f'Your vision has been restored and you are no longer blind.')
 
 
 ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, location=0, condition=0)

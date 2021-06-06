@@ -15,58 +15,35 @@ def d20():
     return random.randint(1, 20)
 
 
-def check_condition(target):
-    if target.condition == 'poisoned':
-        target.hp -= 1
-        print(f'You take 1 damage from being poisoned.')
-        if d20() >= 10:
-            target.condition = 0
-            print(f'Your system has ridden itself of the poison.')
-    elif target.condition == 'hobbled':
-        target.condition = 0
-        print(f'You are hobbled and cannot move this turn.')
-        return 'hobbled'
-    elif target.condition == 'blind':  # to review
-        target.ac -= 4
-        print(f'You are blind and your attack suffers greatly.')
-        if d20() >= 10:
-            target.condition = 0
-            target.ac += 4
-            print(f'Your vision has been restored and you are no longer blind.')
-
-
-def player_attack(attacker, target, weapon):
-    dice = d20()
-    if dice + attacker.attack + weapon.attack >= target.ac:
-        target.hp -= weapon.damage
-        print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice+attacker.attack+weapon.attack}. '
-              f'Target AC: {target.ac}.')
-        if target.hp <= 0:
-            tile[attacker.location].enemy = 0  # the enemy is removed from the current player tile
-            # enemy should also be removed from enemies list? maybe later
-            attacker.xp += target.xp_worth
-            print(f'You attack the {target.name} with your {weapon.name} for {weapon.damage} damage and kill it.'
-                  f' You gain {target.xp_worth} XP.')
+def attack(attacker, target, weapon):
+    if attacker == player:
+        if d20() + attacker.attack + weapon.attack >= target.ac:
+            target.hp -= weapon.damage
+            print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice+attacker.attack+weapon.attack}. '
+                  f'Target AC: {target.ac}.')
+            if target.hp <= 0:
+                tile[attacker.location].enemy = 0  # the enemy is removed from the current player tile
+                # enemy should also be removed from enemies list? maybe later
+                attacker.xp += target.xp_worth
+                print(f'You attack the {target.name} with your {weapon.name} for {weapon.damage} damage and kill it.'
+                      f' You gain {target.xp_worth} XP.')
+            else:
+                print(f"You hit the {target.name} for {weapon.damage} damage but somehow it's still kicking.")
+                attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
         else:
-            print(f"You hit the {target.name} for {weapon.damage} damage but somehow it's still kicking.")
-            enemy_attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
-    else:
-        print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice + attacker.attack + weapon.attack}. '
-              f'Target AC: {target.ac}.')
-        print(f'You missed!')
-        enemy_attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
-
-
-def enemy_attack(attacker, target, weapon):
-    dice = d20()
-    if dice + attacker.attack + weapon.attack >= target.ac:
-        target.hp -= weapon.damage
-        print(f'The {attacker.name} attacks you with its {weapon.name} and hits you for {weapon.damage} damage!')
-        if weapon.poisoned:
-            target.condition = 'poisoned'
-            print(f'You have been poisoned.')
-    else:
-        print(f'The {attacker.name} strikes back with its {weapon.name} but misses!')
+            print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice + attacker.attack + weapon.attack}. '
+                  f'Target AC: {target.ac}.')
+            print(f'You missed!')
+            attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
+    else:  # if the attacker is the enemy
+        if d20() + attacker.attack + weapon.attack >= target.ac:
+            target.hp -= weapon.damage
+            print(f'The {attacker.name} attacks you with its {weapon.name} and hits you for {weapon.damage} damage!')
+            if weapon.apply_condition != 0:
+                target.condition = weapon.apply_condition
+                print(f'You have been {target.condition.name}.')
+        else:
+            print(f'The {attacker.name} strikes back with its {weapon.name} but misses!')
 
 
 def gen_enemy():
@@ -124,9 +101,9 @@ def present_tile(player, tile):
     if not tile[player.location].visited:  # checks if the current tile was not visited before by the player
         print(f"""Exploring further, you find {tile[player.location].text_description}.""")
         tile[player.location].visited = True  # marks current tile as visited by the player
-    elif tile[player.location].enemy == 0 and player.location == 0 and len(tile) > 1:
+    elif tile[player.location].enemy == 0 and player.location == 0 and len(tile) > 1:  # checks if it's tile 0
         print(f"You're back in that damned collapsed cave where you started.")
-    elif tile[player.location].enemy == 0 and len(tile) > 1:
+    elif tile[player.location].enemy == 0 and len(tile) > 1:  # checks if it's another visited tile than tile 0
         print(f"You find yourself in {tile[player.location].text_description}. You recognize the place "
               f"but it gives you no comfort.")
 
@@ -158,11 +135,13 @@ def get_player_input(player, tile):
     elif command.upper() == "R" and tile[player.location].ways_out >= 2:
         gen_tile(player.location, 3)
     elif command.upper() == "A" and tile[player.location].enemy != 0:
-        player_attack(player, tile[player.location].enemy, player.weapon)
+        attack(player, tile[player.location].enemy, player.weapon)
     elif command.upper() == "T" and tile[player.location].enemy == 0:
         rest(player, tile)
     elif command.upper() == "T" and tile[player.location].enemy != 0:
         print(f'You cannot rest under the gaze of the {tile[player.location].enemy.name}!')
+    elif player.condition == hobbled:
+        print(f'You are hobbled and cannot move this turn.')
     else:
         print(f'Wrong command.')
 
@@ -181,7 +160,7 @@ def rest(player, tile):
 
 def start_turn(player, tile):
     print("")
-    check_condition(player)
+    player.check_condition()
     # checks if the player has moved to another tile before describing the tile
     present_tile(player, tile)
     get_player_input(player, tile)

@@ -1,17 +1,8 @@
 import random
-from assets import player_classes, enemy_types, Tile, cave_description
-
-# global variables
-difficulty = 1  # used to adjust dice rolls for traps and enemy generation
-player_level = 1  # used to adjust dice rolls for traps and enemy generation
-max_tiles = 5  # tiles at which the end tile is generated
-enemy = []  # global enemies list. used to call enemies by index
-tile = []  # global tiles list. used to call tiles by index and count explored tiles
-cave_map = []  # global list of pairs (tile, path taken) to prevent new tile generation
+from assets import player_classes, enemy_types, Tile, cave_description, Game
 
 
 def d20():
-    import random
     return random.randint(1, 20)
 
 
@@ -49,26 +40,18 @@ def attack(attacker, target, weapon):
 
 
 def gen_enemy():
-    if d20() - player_level - difficulty < 15:
+    if d20() - player.level - game.difficulty < 15:
         new_enemy = random.choice(enemy_types)
-        enemy.append(new_enemy)  # new enemy gets added to the enemy list
         return new_enemy
-        # print(f'generated enemy {len(enemy) - 1}')
-        # print(f'Enemy {len(enemy) - 1} is a {enemy[-1].name} with {enemy[-1].attack} attack.')
     else:
         return 0
 
 
 def gen_tile(location, chosen_path):
-    if not cave_map.__contains__((location, chosen_path)):  # checks if the player has taken that path before
+    if not game.cave_map.__contains__((location, chosen_path)):  # checks if the player has taken that path before
         new_tile = Tile(ways_out=random.randint(1, 3), trap_type=0, text_description=cave_description(), enemy=0,
                         link0=location, link1=-1, link2=-1, link3=-1, visited=False, start_tile=False)
         # link0(back) always links to current tile
-
-        tile.append(new_tile)  # new tile gets added to the tile list
-        new_tile_id = len(tile) - 1  # newly generated tile id
-        # new_tile is the tile object itself
-
         if chosen_path == 1:  # links current location tile to the newly generated tile by chosen_path
             player.location.link1 = new_tile  # path 1 of current tile links to the newly generated tile
         elif chosen_path == 2:
@@ -81,7 +64,7 @@ def gen_tile(location, chosen_path):
 
         player.location = new_tile  # player location gets updated to the newly generated tile
         player.location.enemy = gen_enemy()  # the newly generated tile gets a newly generated enemy
-        cave_map.append((location, chosen_path))  # records that the player has chosen this path from this tile
+        game.cave_map.append((location, chosen_path))  # records that the player has chosen this path from this tile
 
     else:
         if chosen_path == 1:  # if path was taken before, player location is updated to previously generated tile
@@ -95,19 +78,18 @@ def gen_tile(location, chosen_path):
 def gen_tile0():
     tile0 = Tile(ways_out=1, trap_type=0, text_description="a recently collapsed cave", enemy=0, link0=-1, link1=-1,
                  link2=-1, link3=-1, visited=True, start_tile=True)  # new_tile object of class Tile gets created
-    tile.append(tile0)  # and it gets added to the list of tiles
     player.location = tile0
     print(f"""Your eyes barely open after the fall and you realize you're now underground.
 Determined to get out of here, you evaluate your options.""")
 
 
 def present_tile():
-    if not player.location.visited:  # checks if the current tile was not visited before by the player
+    if player.location.start_tile and len(game.cave_map) > 0:  # checks if player is back in tile0
+        print(f"You're back in that damned collapsed cave where you started.")
+    elif not player.location.visited:  # checks if the current tile was not visited before by the player
         print(f"""Exploring further, you find {player.location.text_description}.""")
         player.location.visited = True  # marks current tile as visited by the player
-    elif player.location.enemy == 0 and player.location == 0 and len(tile) > 1:  # checks if it's tile 0
-        print(f"You're back in that damned collapsed cave where you started.")
-    elif player.location.enemy == 0 and len(tile) > 1:  # checks if it's another visited tile than tile 0
+    elif len(game.cave_map) > 0:  # checks if it's another visited tile than tile 0
         print(f"You find yourself in {player.location.text_description}. You recognize the place "
               f"but it gives you no comfort.")
 
@@ -141,16 +123,16 @@ def get_player_input():
     elif command.upper() == "A" and player.location.enemy != 0:
         attack(player, player.location.enemy, player.weapon)
     elif command.upper() == "T" and player.location.enemy == 0:
-        rest(player, tile)
+        rest()
     elif command.upper() == "T" and player.location.enemy != 0:
         print(f'You cannot rest under the gaze of the {player.location.enemy.name}!')
     else:
         print(f'Wrong command.')
 
 
-def rest(player, tile):
-    if random.randint(1, 10) + difficulty + player_level > 5:
-        tile[player.location].enemy = gen_enemy()
+def rest():
+    if random.randint(1, 10) + game.difficulty + player.level > 5:
+        player.location.enemy = gen_enemy()
         print(f'Your rest is interrupted!')
         get_player_input()
     else:
@@ -158,24 +140,23 @@ def rest(player, tile):
         if player.hp > player.max_hp:
             player.hp = player.max_hp
         print(f'You got a well-deserved rest and are now at {player.hp}/{player.max_hp} HP.')
-# will make it a player method
 
 
 def start_turn():
     print("")
     player.check_condition()
-    # checks if the player has moved to another tile before describing the tile
     present_tile()
     get_player_input()
 
 
+game = Game(difficulty=1, length=5, cave_map=[])
 player = player_classes[1]  # 0 ranger, 1 fighter
 gen_tile0()
 
 while True:
     if player.hp > 0:
-        if len(tile) < max_tiles + player_level + difficulty or player.location.enemy != 0:  # checks if reached
-            # maximum no of tiles for the game and that there's no enemy on the last tile
+        if len(game.cave_map) < game.length + player.level + game.difficulty or player.location.enemy != 0:
+            # checks if reached maximum no of tiles for the game and that there's no enemy on the last tile
             start_turn()
         else:
             print(f'You have reached the end of the dungeon and can return safely to the surface!')
@@ -184,4 +165,3 @@ while True:
     else:
         print(f'You are dead. Game over!')
         break
-

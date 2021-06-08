@@ -1,6 +1,13 @@
 import random
 
 
+class Game:
+    def __init__(self, difficulty, length, cave_map):
+        self.cave_map = cave_map
+        self.difficulty = difficulty
+        self.length = length
+
+
 class Condition:
     def __init__(self, name, damage, ac_reduction, duration):
         self.name = name
@@ -56,13 +63,14 @@ enemy_types = [goblin, goblin_champion, kobold_archer, spider]
 
 
 class PlayerCharacter:
-    def __init__(self, max_hp, hp, ac, attack, weapon, xp, location, condition):
+    def __init__(self, max_hp, hp, ac, attack, weapon, xp, level, location, condition):
         self.max_hp = max_hp
         self.hp = hp
         self.ac = ac
         self.attack = attack
         self.weapon = weapon
         self.xp = xp
+        self.level = level
         self.location = location
         self.condition = condition
 
@@ -74,21 +82,13 @@ class PlayerCharacter:
             if d20() >= 10:
                 self.condition = 0
                 print(f'Your system has ridden itself of the poison.')
-        # elif self.condition == hobbled:
-        #     self.condition = 0
-        #     print(f'You are hobbled and cannot move this turn.')
-        #     return 'hobbled'
-        # elif self.condition == blind:  # to review
-        #     self.ac += self.condition.ac_reduction
-        #     print(f'You are blinded for 1 turn and your attack suffers greatly.')
-        #     if d20() >= 10:
-        #         self.condition = 0
-        #         self.ac += 4
-        #         print(f'Your vision has been restored and you are no longer blind.')
 
 
-ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, location=None, condition=0)
-fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, location=None, condition=0)
+
+ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, level=1,
+                         location=None, condition=0)
+fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, level=1,
+                          location=None, condition=0)
 
 player_classes = [ranger, fighter]
 
@@ -114,5 +114,5 @@ cave_word3 = ['with damp walls', 'with a slippery floor', 'traversed by a snakin
 
 
 def cave_description():
-    descrip = random.choice(cave_word1) + " " + random.choice(cave_word2) + " " + random.choice(cave_word3)
-    return descrip
+    description = random.choice(cave_word1) + " " + random.choice(cave_word2) + " " + random.choice(cave_word3)
+    return description

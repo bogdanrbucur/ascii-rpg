@@ -84,7 +84,6 @@ class PlayerCharacter:
                 print(f'Your system has ridden itself of the poison.')
 
 
-
 ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, level=1,
                          location=None, condition=0)
 fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, level=1,

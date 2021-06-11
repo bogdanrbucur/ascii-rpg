@@ -1,5 +1,5 @@
 import random
-from assets import player_classes, enemy_types, Tile, cave_description, Game
+from assets import player_classes, enemy_types, Tile, cave_description, Game, Condition, conditions
 
 
 def d20():
@@ -9,27 +9,28 @@ def d20():
 def attack(attacker, target, weapon):
     if attacker == player:
         dice = d20()
-        if dice + attacker.attack + weapon.attack >= target.ac:
+        if dice + attacker.attack + weapon.attack_bonus >= target.ac:
             target.hp -= weapon.damage
-            print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice + attacker.attack + weapon.attack}. '
-                  f'Target AC: {target.ac}.')
+            print(f'd{dice} + {attacker.attack} + {weapon.attack_bonus} = '
+                  f'{dice + attacker.attack + weapon.attack_bonus}. Target AC: {target.ac}.')
             if target.hp <= 0:
                 player.location.enemy = 0  # the enemy is removed from the current player tile
                 # enemy should also be removed from enemies list? maybe later
                 attacker.xp += target.xp_worth
+                attacker.killed += 1
                 print(f'You attack the {target.name} with your {weapon.name} for {weapon.damage} damage and kill it.'
                       f' You gain {target.xp_worth} XP.')
             else:
                 print(f"You hit the {target.name} for {weapon.damage} damage but somehow it's still kicking.")
                 attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
         else:
-            print(f'd{dice} + {attacker.attack} + {weapon.attack} = {dice + attacker.attack + weapon.attack}. '
+            print(f'd{dice} + {attacker.attack} + {weapon.attack_bonus} = {dice + attacker.attack + weapon.attack_bonus}. '
                   f'Target AC: {target.ac}.')
             print(f'You missed!')
             attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
     else:  # if the attacker is the enemy
         dice = d20()
-        if dice + attacker.attack + weapon.attack >= target.ac:
+        if dice + attacker.attack + weapon.attack_bonus >= target.ac:
             target.hp -= weapon.damage
             print(f'The {attacker.name} attacks you with its {weapon.name} and hits you for {weapon.damage} damage!')
             if weapon.apply_condition != 0:
@@ -80,7 +81,8 @@ def gen_tile0():
                  link2=-1, link3=-1, visited=True, start_tile=True)  # new_tile object of class Tile gets created
     player.location = tile0
     print(f"""Your eyes barely open after the fall and you realize you're now underground.
-Determined to get out of here, you evaluate your options.""")
+Determined to get out of here, you evaluate your options.
+You can always check your [C]haracter sheet.""")
 
 
 def present_tile():
@@ -109,16 +111,17 @@ def get_player_input():
             print(f'You can choose to go [L]eft, [F]orward or [R]ight. Or you can turn [B]ack the way you came.')
 
     command = input(f'You choose to: ')
-
-    if command.upper() == "B" and not player.location.start_tile:
+    if command.upper() == 'C':
+        player.sheet()
+    elif command.upper() == "B" and not player.location.start_tile:
         player.location = player.location.link0  # player goes to the previous tile
     elif command.upper() == "B" and player.location.start_tile:
         print(f'You cannot go back up. The only way is [F]orward.')
-    elif command.upper() == "L" and player.location.ways_out >= 2:
+    elif command.upper() == "L" and player.location.enemy == 0 and player.location.ways_out >= 2:
         gen_tile(player.location, 1)
-    elif command.upper() == "F" and player.location.ways_out != 2:
+    elif command.upper() == "F" and player.location.enemy == 0 and player.location.ways_out != 2:
         gen_tile(player.location, 2)
-    elif command.upper() == "R" and player.location.ways_out >= 2:
+    elif command.upper() == "R" and player.location.enemy == 0 and player.location.ways_out >= 2:
         gen_tile(player.location, 3)
     elif command.upper() == "A" and player.location.enemy != 0:
         attack(player, player.location.enemy, player.weapon)
@@ -126,6 +129,8 @@ def get_player_input():
         rest()
     elif command.upper() == "T" and player.location.enemy != 0:
         print(f'You cannot rest under the gaze of the {player.location.enemy.name}!')
+    elif command.upper() == "L" or "F" or "R" and player.location.enemy != 0:
+        print(f'You cannot advance past the enemy.')
     else:
         print(f'Wrong command.')
 
@@ -142,16 +147,27 @@ def rest():
         print(f'You got a well-deserved rest and are now at {player.hp}/{player.max_hp} HP.')
 
 
-def start_turn():
-    print("")
-    player.check_condition()
-    present_tile()
-    get_player_input()
+def check_player_condition():
+    if player.condition != 0 and player.condition == poisoned:
+        player.hp -= 1
+        print(f'You take 1 damage from being poisoned.')
+        if d20() >= 10:
+            player.condition = 0
+            print(f'Your system has ridden itself of the poison.')
 
 
 game = Game(difficulty=1, length=5, cave_map=[])
-player = player_classes[1]  # 0 ranger, 1 fighter
+player = player_classes[0]  # 0 ranger, 1 fighter
 gen_tile0()
+# player.sheet()
+
+
+def start_turn():
+    print("")
+    check_player_condition()  # BUG goes to line 148 again?!
+    present_tile()
+    get_player_input()
+
 
 while True:
     if player.hp > 0:

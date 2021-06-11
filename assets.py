@@ -20,14 +20,13 @@ poisoned = Condition(name='poisoned', damage=1, duration=0, ac_reduction=0)
 hobbled = Condition(name='hobbled', damage=0, duration=1, ac_reduction=0)  # not implemented
 blind = Condition(name='blind', damage=0, duration=1, ac_reduction=-4)  # not implemented
 
-
 conditions = (poisoned, hobbled, blind)
 
 
 class Weapon:
     def __init__(self, name, attack_bonus, damage, value, apply_condition):
         self.name = name
-        self.attack = attack_bonus
+        self.attack_bonus = attack_bonus
         self.damage = damage
         self.value = value
         self.apply_condition = apply_condition
@@ -63,7 +62,7 @@ enemy_types = [goblin, goblin_champion, kobold_archer, spider]
 
 
 class PlayerCharacter:
-    def __init__(self, max_hp, hp, ac, attack, weapon, xp, level, location, condition):
+    def __init__(self, max_hp, hp, ac, attack, weapon, xp, level, location, condition, class_, killed):
         self.max_hp = max_hp
         self.hp = hp
         self.ac = ac
@@ -73,21 +72,24 @@ class PlayerCharacter:
         self.level = level
         self.location = location
         self.condition = condition
+        self.class_ = class_
+        self.killed = killed
 
-    def check_condition(self):
-        from main import d20
-        if self.condition == poisoned:
-            self.hp -= 1
-            print(f'You take 1 damage from being poisoned.')
-            if d20() >= 10:
-                self.condition = 0
-                print(f'Your system has ridden itself of the poison.')
+    def sheet(self):
+        print(f'######################################')
+        print(f'#  {self.class_}  HP {self.hp}/{self.max_hp}  AC {self.ac}  ATT {self.attack}  XP {self.xp}')
+        print(f'#  {self.weapon.name.capitalize()} equipped  DMG {self.weapon.damage}  ATT {self.weapon.attack_bonus}')
+        print(f'#  Enemies killed {self.killed}')
+        if self.condition != 0:
+            print(f'#  {self.condition.name}  ')
+        print(f'######################################')
+        print('')
 
 
-ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=2, weapon=bow, xp=0, level=1,
-                         location=None, condition=0)
-fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=4, weapon=steel_sword, xp=0, level=1,
-                          location=None, condition=0)
+ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=1, weapon=bow, xp=0, level=1,
+                         location=None, condition=0, class_='Ranger', killed=0)
+fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=2, weapon=steel_sword, xp=0, level=1,
+                          location=None, condition=0, class_='Fighter', killed=0)
 
 player_classes = [ranger, fighter]
 

@@ -136,9 +136,10 @@ def get_player_input():
 
 
 def rest():
-    if random.randint(1, 10) + game.difficulty + player.level > 5:
+    if random.randint(1, 10) + game.difficulty > 5:  # chance to get ambushed scales with game difficulty
         player.location.enemy = gen_enemy()
-        print(f'Your rest is interrupted!')
+        print(f"Your rest is interrupted and you've been ambushed!")
+        attack(player.location.enemy, player, player.location.enemy.weapon)
         get_player_input()
     else:
         player.hp += 2

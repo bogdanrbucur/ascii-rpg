@@ -11,7 +11,7 @@ Features implemented so far:
 - different weapons for player and enemies with different stats;
 - dynamic tile generation as you explore, with multiple paths and dynamic descriptions;
 - "map" of the cave, in the sense that the game remembers where you've been if you backtrack;
-- d20 roll for your and enemie's attacks;
+- d20 roll for your and enemy's attacks;
 - some enemies can poison you and you need to roll a d20 to get rid of poison;
 - a rest system to regenerate health at the risk of being ambushed.
 
@@ -21,3 +21,5 @@ Features to be implemented:
 - more player classes;
 - a level-up system;
 - an inventory system and loot.
+
+I'd also like to implement a sort of ASCII map of the cave that reveals the explored tiles and player location but seems like a lot of tedious work. Will leave it for a very boring week.

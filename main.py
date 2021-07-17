@@ -24,8 +24,9 @@ def attack(attacker, target, weapon):
                 print(f"You hit the {target.name} for {weapon.damage} damage but somehow it's still kicking.")
                 attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
         else:
-            print(f'd{dice} + {attacker.attack} + {weapon.attack_bonus} = {dice + attacker.attack + weapon.attack_bonus}. '
-                  f'Target AC: {target.ac}.')
+            print(
+                f'd{dice} + {attacker.attack} + {weapon.attack_bonus} = {dice + attacker.attack + weapon.attack_bonus}.'
+                f'Target AC: {target.ac}.')
             print(f'You missed!')
             attack(target, attacker, target.weapon)  # this will be replaced with enemy_ai
     else:  # if the attacker is the enemy
@@ -129,7 +130,7 @@ def get_player_input():
         rest()
     elif command.upper() == "T" and player.location.enemy != 0:
         print(f'You cannot rest under the gaze of the {player.location.enemy.name}!')
-    elif command.upper() == "L" or "F" or "R" and player.location.enemy != 0:
+    elif command.upper() == "L" or "F" or "R" and player.location.enemy != 0:  # BUG if F and there's only L and R
         print(f'You cannot advance past the enemy.')
     else:
         print(f'Wrong command.')
@@ -139,7 +140,7 @@ def rest():
     if random.randint(1, 10) + game.difficulty > 5:  # chance to get ambushed scales with game difficulty
         player.location.enemy = gen_enemy()
         print(f"Your rest is interrupted and you've been ambushed!")
-        attack(player.location.enemy, player, player.location.enemy.weapon)
+        attack(player.location.enemy, player, player.location.enemy.weapon)  # enemy attacks first if it ambushes you
         get_player_input()
     else:
         player.hp += 2
@@ -164,7 +165,8 @@ def start_turn():
     get_player_input()
 
 
-def choose_class(player):
+def choose_class():
+    global player
     print(f'Welcome to text_RPG. You can play as one of 3 classes:')
     for i in player_classes:
         player = i
@@ -185,14 +187,13 @@ def choose_class(player):
         print(f'You are a Wizard.')
     else:
         print(f'Invalid input.')
-        choose_class(player)
+        choose_class()
 
 
 game = Game(difficulty=1, length=5, cave_map=[])  # initialize the game object
-player = player_classes[0]  # initializes the player object as a Ranger
-choose_class(player)  # player chooses his class
+# player = player_classes[0]  # initializes the player object as a Ranger
+choose_class()  # player chooses his class
 gen_tile0()  # generate the start tile
-
 
 while True:
     if player.hp > 0:

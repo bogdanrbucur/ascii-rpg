@@ -156,17 +156,41 @@ def check_player_condition():
             print(f'Your system has ridden itself of the poison.')
 
 
-game = Game(difficulty=1, length=5, cave_map=[])
-player = player_classes[0]  # 0 ranger, 1 fighter
-gen_tile0()
-# player.sheet()
-
-
 def start_turn():
     print("")
-    check_player_condition()  # BUG goes to line 148 again?!
+    check_player_condition()
     present_tile()
     get_player_input()
+
+
+def choose_class(player):
+    print(f'Welcome to text_RPG. You can play as one of 3 classes:')
+    for i in player_classes:
+        player = i
+        player.sheet()
+    choice = input("""Choose:
+[1] Ranger
+[2] Fighter
+[3] Wizard
+""")
+    if choice == '1':
+        player = player_classes[0]  # Ranger
+        print(f'You are a Ranger.')
+    elif choice == '2':
+        player = player_classes[1]  # Fighter
+        print(f'You are a Fighter.')
+    elif choice == '3':
+        player = player_classes[2]  # Wizard
+        print(f'You are a Wizard.')
+    else:
+        print(f'Invalid input.')
+        choose_class(player)
+
+
+game = Game(difficulty=1, length=5, cave_map=[])  # initialize the game object
+player = player_classes[0]  # initializes the player object as a Ranger
+choose_class(player)  # player chooses his class
+gen_tile0()  # generate the start tile
 
 
 while True:

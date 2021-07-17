@@ -37,9 +37,9 @@ rusty_dagger = Weapon(name='rusty dagger', attack_bonus=0, damage=2, value=50, a
 steel_sword = Weapon(name='steel sword', attack_bonus=1, damage=4, value=200, apply_condition=0)
 bow = Weapon(name='bow', attack_bonus=4, damage=3, value=300, apply_condition=0)
 poisoned_fangs = Weapon(name='poisoned fangs', attack_bonus=2, damage=1, value=0, apply_condition=poisoned)
-god_weapon = Weapon(name='god_weapon', attack_bonus=20, damage=20, value=0, apply_condition=0)
+wand = Weapon(name='wand', attack_bonus=5, damage=5, value=400, apply_condition=0)
 
-weapons = [unarmed, rusty_dagger, steel_sword, bow, poisoned_fangs, god_weapon]
+weapons = [unarmed, rusty_dagger, steel_sword, bow, poisoned_fangs, wand]
 
 
 class Enemy:
@@ -90,8 +90,10 @@ ranger = PlayerCharacter(max_hp=8, hp=8, ac=12, attack=1, weapon=bow, xp=0, leve
                          location=None, condition=0, class_='Ranger', killed=0)
 fighter = PlayerCharacter(max_hp=10, hp=10, ac=14, attack=2, weapon=steel_sword, xp=0, level=1,
                           location=None, condition=0, class_='Fighter', killed=0)
+wizard = PlayerCharacter(max_hp=7, hp=7, ac=10, attack=5, weapon=wand, xp=0, level=0,
+                         location=None, condition=0, class_='Wizard', killed=0)
 
-player_classes = [ranger, fighter]
+player_classes = [ranger, fighter, wizard]
 
 
 class Tile:

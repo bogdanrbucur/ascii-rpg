@@ -204,5 +204,5 @@ while True:
             break
             # this doesn't stop the game?
     else:
-        print(f'You are dead. Game over!')
+        print(f'You are dead. Vermin will feed on your remains.')
         break

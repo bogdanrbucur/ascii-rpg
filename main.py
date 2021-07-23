@@ -34,7 +34,7 @@ def attack(attacker, target, weapon):
         if dice + attacker.attack + weapon.attack_bonus >= target.ac:
             target.hp -= weapon.damage
             print(f'The {attacker.name} attacks you with its {weapon.name} and hits you for {weapon.damage} damage!')
-            if weapon.apply_condition != 0:
+            if weapon.apply_condition != 0:  # if weapon applies a condition ie. poison
                 target.condition = weapon.apply_condition
                 print(f'You have been {target.condition.name}.')
         else:

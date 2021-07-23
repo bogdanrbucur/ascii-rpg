@@ -150,7 +150,7 @@ def rest():
 
 
 def check_player_condition():
-    if player.condition != 0 and player.condition == poisoned:
+    if player.condition != 0 and player.condition == poisoned:  # Code problem?
         player.hp -= 1
         print(f'You take 1 damage from being poisoned.')
         if d20() >= 10:

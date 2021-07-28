@@ -1,3 +1,4 @@
+# This is where the classes and objects are defined 
 import random
 
 

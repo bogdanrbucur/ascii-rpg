@@ -57,7 +57,7 @@ class Enemy:
 goblin = Enemy(name="Goblin", max_hp=4, hp=4, ac=12, attack=4, weapon=rusty_dagger, xp_worth=1)
 goblin_champion = Enemy(name="Goblin Champion", max_hp=6, hp=6, ac=14, attack=4, weapon=steel_sword, xp_worth=3)
 kobold_archer = Enemy(name="Kobold Archer", max_hp=3, hp=3, ac=10, attack=6, weapon=bow, xp_worth=2)
-spider = Enemy(name="Spider", max_hp=3, hp=3, ac=11, attack=15, weapon=poisoned_fangs, xp_worth=3)
+spider = Enemy(name="Spider", max_hp=3, hp=3, ac=11, attack=5, weapon=poisoned_fangs, xp_worth=3)
 
 enemy_types = [goblin, goblin_champion, kobold_archer, spider]
 
